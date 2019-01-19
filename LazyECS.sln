@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyECS", "LazyECS\LazyECS.csproj", "{3F3E0F92-D120-49A9-B53C-817EAFC332C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyECS.Test", "LazyECS.Test\LazyECS.Test.csproj", "{F87C726D-9C62-4CB8-8798-ECF94828CB66}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F3E0F92-D120-49A9-B53C-817EAFC332C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F3E0F92-D120-49A9-B53C-817EAFC332C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F3E0F92-D120-49A9-B53C-817EAFC332C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F3E0F92-D120-49A9-B53C-817EAFC332C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F87C726D-9C62-4CB8-8798-ECF94828CB66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F87C726D-9C62-4CB8-8798-ECF94828CB66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F87C726D-9C62-4CB8-8798-ECF94828CB66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F87C726D-9C62-4CB8-8798-ECF94828CB66}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
