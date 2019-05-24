@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using LazyECS.Component;
 using LazyECS.Models;
 
 namespace LazyECS
@@ -14,25 +16,31 @@ namespace LazyECS
             SystemInfos = systemInfos;
         }
 
+        public void OnStart()
+        {
+            foreach (var processing in SystemInfos)
+                processing.Value.SystemProcessing.Start();
+        }
+
         public void OnUpdate()
         {
             foreach (var processing in SystemInfos)
             {
                 var processingInfo = processing.Value;
-                foreach (var entity in processingInfo.AttachedEntity)
-                {
-                    AttachComponents(processingInfo, entity);
+                if (processing.Value.AttachedEntity.Count > 0)
                     processingInfo.SystemProcessing.Execute();
-                }
             }
         }
 
-        private static void AttachComponents(SystemProcessingInfo processingInfo, Entity entity)
+        public static void AttachComponents(SystemProcessingInfo processingInfo, List<IEntity> entities)
         {
             foreach (var field in processingInfo.NeededComponents)
             {
-                var component = entity.GetComponent(field.TypeComponent);
-                field.AttachToSystem(processingInfo.SystemProcessing, component);
+                var components = Array.CreateInstance(field.TypeComponent.GetElementType(), entities.Count);
+                for (var i = 0; i < entities.Count; i++)
+                    components.SetValue(
+                        entities[i].GetComponent(field.TypeComponent.GetElementType()), i);
+                field.AttachToSystem(processingInfo.SystemProcessing, components as IComponentData[]);
             }
         }
     }

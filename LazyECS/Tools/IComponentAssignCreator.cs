@@ -8,19 +8,22 @@ namespace LazyECS.Tools
 {
     public interface IComponentAssignCreator
     {
-        Action<ISystemProcessing, IComponentData> GetExpression(Type tProcessing, FieldInfo fieldComponentInfo);
+        Action<ISystemProcessing, IComponentData[]> GetExpression(Type tProcessing, FieldInfo fieldComponentInfo);
     }
 
     public class ComponentAssignCreator : IComponentAssignCreator
     {
-        public Action<ISystemProcessing, IComponentData> GetExpression(Type tProcessing, FieldInfo fieldComponentInfo)
+        public Action<ISystemProcessing, IComponentData[]> GetExpression(Type tProcessing, FieldInfo fieldComponentInfo)
         {
             var processingParameterEx = Expression.Parameter(typeof(ISystemProcessing), "p");
-            var componentParameterEx = Expression.Parameter(typeof(IComponentData), "c");
+            var componentsParameterEx = Expression.Parameter(typeof(IComponentData[]), "c");
 
             var field = Expression.Field(Expression.Convert(processingParameterEx, tProcessing), fieldComponentInfo);
-            var memberAssignment = Expression.Assign(field, Expression.Convert(componentParameterEx, fieldComponentInfo.FieldType));
-            var lambda = Expression.Lambda<Action<ISystemProcessing, IComponentData>>(memberAssignment, processingParameterEx, componentParameterEx).Compile();
+            var memberAssignment = Expression.Assign(field,
+                Expression.Convert(componentsParameterEx, fieldComponentInfo.FieldType));
+            var lambda = Expression
+                .Lambda<Action<ISystemProcessing, IComponentData[]>>(memberAssignment, processingParameterEx,
+                    componentsParameterEx).Compile();
 
             return lambda;
         }

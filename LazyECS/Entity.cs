@@ -5,7 +5,7 @@ using LazyECS.Component;
 
 namespace LazyECS
 {
-    public class Entity
+    public class Entity : IEntity
     {
         public uint Id { get; }
 
@@ -25,19 +25,31 @@ namespace LazyECS
             ecsManager.BindComponentTo(this, component);
         }
 
+        public void RequestAddComponent<T>(T component)
+            where T : IComponentData
+        {
+            componentDatas.Add(typeof(T), component);
+            ecsManager.BindComponentTo(this, component, false);
+        }
+
         public T GetComponent<T>()
             where T : IComponentData
         {
             IComponentData result;
             if (componentDatas.TryGetValue(typeof(T), out result))
-                return (T)result;
+                return (T) result;
 
             return default(T);
         }
-        
+
         public IComponentData GetComponent(Type typeComponent)
         {
-            return componentDatas.TryGetValue(typeComponent, out var result) ? result : default(IComponentData);
+            return componentDatas[typeComponent];
+        }
+
+        public bool HasComponent(Type typeComponent)
+        {
+            return componentDatas.ContainsKey(typeComponent);
         }
 
         public IComponentData[] GetComponents()
@@ -52,7 +64,7 @@ namespace LazyECS
             componentDatas.Remove(type);
             ecsManager.UnbindComponent(this, component);
         }
-        
+
         public void RemoveComponent(Type type)
         {
             var component = componentDatas[type];
@@ -74,5 +86,19 @@ namespace LazyECS
         {
             return Id == entity.Id;
         }
+    }
+
+    public interface IEntity
+    {
+        void AddComponent<T>(T component) where T : IComponentData;
+        T GetComponent<T>() where T : IComponentData;
+        IComponentData GetComponent(Type typeComponent);
+        bool HasComponent(Type typeComponent);
+        IComponentData[] GetComponents();
+        void RemoveComponent<T>();
+        void RemoveComponent(Type type);
+
+        void RequestAddComponent<T>(T component)
+            where T : IComponentData;
     }
 }

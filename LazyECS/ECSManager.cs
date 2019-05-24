@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using LazyECS.Component;
@@ -13,13 +14,13 @@ namespace LazyECS
     {
         private readonly IComponentAssignCreator componentAssignCreator;
         private EntitySystemsController entitySystemsController;
-        private readonly HashSet<Entity> entities;
+        private readonly HashSet<IEntity> entities;
         private uint lastId;
 
         public ECSManager(IComponentAssignCreator componentAssignCreator)
         {
             this.componentAssignCreator = componentAssignCreator;
-            entities = new HashSet<Entity>();
+            entities = new HashSet<IEntity>();
         }
 
         public EntitySystemsController Init()
@@ -39,10 +40,8 @@ namespace LazyECS
 
             foreach (var type in implementation)
             {
-                var instance = Activator.CreateInstance(type) as ISystemProcessing;
-                systemProcessings.Add(type, instance);
-
                 var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(CheckField);
+
                 var assignInfo = new List<ComponentInfo>();
                 foreach (var fieldInfo in fields)
                 {
@@ -50,6 +49,11 @@ namespace LazyECS
                     assignInfo.Add(
                         new ComponentInfo(fieldInfo.FieldType, expressionAssign));
                 }
+
+                var instance = Activator.CreateInstance(type) as ISystemProcessing;
+                  
+                systemProcessings.Add(type, instance);
+
 
                 systemInfos.Add(type,
                     new SystemProcessingInfo {SystemProcessing = instance, NeededComponents = assignInfo});
@@ -59,15 +63,27 @@ namespace LazyECS
             return entitySystemsController;
         }
 
-        public void BindComponentTo(Entity entity, IComponentData componentData)
+        public void ReattachComponents<T>()
+        {
+            var processing = entitySystemsController.SystemInfos.Values.Where(e =>
+                e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == typeof(T)));
+            foreach (var processingInfo in processing)
+                EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
+        }
+
+        public void BindComponentTo(IEntity entity, IComponentData componentData, bool isAttach = true)
         {
             var componentType = componentData.GetType();
             var processing = entitySystemsController.SystemInfos.Values.Where(e =>
-                e.NeededComponents.Any(x => x.TypeComponent == componentType));
+                e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == componentType));
             foreach (var processingInfo in processing)
             {
-                if (processingInfo.NeededComponents.All(e => entity.GetComponent(e.TypeComponent) != null))
+                if (processingInfo.NeededComponents.All(e => entity.HasComponent(e.TypeComponent.GetElementType())))
+                {
                     processingInfo.AttachedEntity.Add(entity);
+                    if (isAttach)
+                        EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
+                }
             }
         }
 
@@ -75,26 +91,28 @@ namespace LazyECS
         {
             var componentType = componentData.GetType();
             var processing = entitySystemsController.SystemInfos.Values.Where(e =>
-                e.NeededComponents.Any(x => x.TypeComponent == componentType));
+                e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == componentType));
             foreach (var processingInfo in processing)
             {
                 processingInfo.AttachedEntity.Remove(entity);
+                EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
             }
         }
 
-        public Entity CreateEntity()
+        public IEntity CreateEntity()
         {
             var entity = new Entity(this, ++lastId);
             entities.Add(entity);
             return entity;
         }
 
-        public void RemoveEntity(Entity entity)
+        public void RemoveEntity(IEntity entity)
         {
             foreach (var componentData in entity.GetComponents())
             {
                 entity.RemoveComponent(componentData.GetType());
             }
+
             entities.Remove(entity);
         }
 
