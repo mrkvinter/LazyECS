@@ -9,6 +9,6 @@ namespace LazyECS.Models
 
         public List<ComponentInfo> NeededComponents = new List<ComponentInfo>();
 
-        public List<IEntity> AttachedEntity = new List<IEntity>();
+        public List<Entity> AttachedEntity = new List<Entity>();
     }
 }

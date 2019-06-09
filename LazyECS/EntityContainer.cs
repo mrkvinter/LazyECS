@@ -1,47 +1,53 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 using LazyECS.Component;
-using LazyECS.Models;
 
 namespace LazyECS
 {
-    public class EntitySystemsController
+    public class EntityContainer
     {
-        internal readonly Dictionary<Type, SystemProcessingInfo> SystemInfos;
-
-
-        public EntitySystemsController(Dictionary<Type, SystemProcessingInfo> systemInfos)
+        public Dictionary<Entity, Dictionary<Type, IComponentData>> ComponentsContainer = new Dictionary<Entity, Dictionary<Type, IComponentData>>();
+        
+        public bool HasComponent(Entity entity, Type typeComponent)
         {
-            SystemInfos = systemInfos;
+            return ComponentsContainer.TryGetValue(entity, out var components) && components.ContainsKey(typeComponent);
         }
 
-        public void OnStart()
+        public void AddEntity(Entity entity)
         {
-            foreach (var processing in SystemInfos)
-                processing.Value.SystemProcessing.Start();
+            ComponentsContainer.Add(entity, new Dictionary<Type, IComponentData>());
+        }
+        
+        public void RemoveEntity(Entity entity)
+        {
+            ComponentsContainer.Remove(entity);
         }
 
-        public void OnUpdate()
+        public IComponentData[] GetComponents(Entity entity)
         {
-            foreach (var processing in SystemInfos)
-            {
-                var processingInfo = processing.Value;
-                if (processing.Value.AttachedEntity.Count > 0)
-                    processingInfo.SystemProcessing.Execute();
-            }
+            return ComponentsContainer[entity].Select(e => e.Value).ToArray();
+        }
+        
+        public T GetComponent<T>(Entity entity)
+            where T : IComponentData
+        {
+            return (T)ComponentsContainer[entity][typeof(T)];
+        }
+        
+        public IComponentData GetComponent(Entity entity, Type type)
+        {
+            return ComponentsContainer[entity][type];
         }
 
-        public static void AttachComponents(SystemProcessingInfo processingInfo, List<IEntity> entities)
+        public void AddComponent(Entity entity, IComponentData componentData)
         {
-            foreach (var field in processingInfo.NeededComponents)
-            {
-                var components = Array.CreateInstance(field.TypeComponent.GetElementType(), entities.Count);
-                for (var i = 0; i < entities.Count; i++)
-                    components.SetValue(
-                        entities[i].GetComponent(field.TypeComponent.GetElementType()), i);
-                field.AttachToSystem(processingInfo.SystemProcessing, components as IComponentData[]);
-            }
+            ComponentsContainer[entity].Add(componentData.GetType(), componentData);
+        }
+        
+        public void RemoveComponent(Entity entity, Type type)
+        {
+            ComponentsContainer[entity].Remove(type);
         }
     }
 }

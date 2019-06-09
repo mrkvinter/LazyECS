@@ -12,26 +12,31 @@ namespace LazyECS
 {
     public class ECSManager
     {
+        public EntityManager EntityManager;
+        
         private readonly IComponentAssignCreator componentAssignCreator;
         private EntitySystemsController entitySystemsController;
-        private readonly HashSet<IEntity> entities;
+        private readonly HashSet<Entity> entities;
         private uint lastId;
+        public EntityContainer EntityContainer;
 
         public ECSManager(IComponentAssignCreator componentAssignCreator)
         {
             this.componentAssignCreator = componentAssignCreator;
-            entities = new HashSet<IEntity>();
+            entities = new HashSet<Entity>();
+            EntityContainer = new EntityContainer();
         }
 
         public EntitySystemsController Init()
         {
+            EntityManager = new EntityManager(this);
             var typeSystem = typeof(ISystemProcessing);
             var implementation =
                 AppDomain
                     .CurrentDomain
                     .GetAssemblies()
                     .SelectMany(e => e.GetTypes())
-                    .Where(e => e.GetTypeInfo().IsClass)
+                    .Where(e => e.GetTypeInfo().IsClass && !e.GetTypeInfo().IsAbstract)
                     .Where(e => typeSystem.IsAssignableFrom(e))
                     .ToArray();
 
@@ -51,7 +56,7 @@ namespace LazyECS
                 }
 
                 var instance = Activator.CreateInstance(type) as ISystemProcessing;
-                  
+
                 systemProcessings.Add(type, instance);
 
 
@@ -59,61 +64,71 @@ namespace LazyECS
                     new SystemProcessingInfo {SystemProcessing = instance, NeededComponents = assignInfo});
             }
 
-            entitySystemsController = new EntitySystemsController(systemInfos);
+            entitySystemsController = new EntitySystemsController(systemInfos, EntityManager);
             return entitySystemsController;
         }
 
-        public void ReattachComponents<T>()
+        public void ReattachComponents(Type type)
         {
             var processing = entitySystemsController.SystemInfos.Values.Where(e =>
-                e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == typeof(T)));
+                e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == type));
             foreach (var processingInfo in processing)
-                EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
+                AttachComponents(processingInfo, processingInfo.AttachedEntity);
         }
 
-        public void BindComponentTo(IEntity entity, IComponentData componentData, bool isAttach = true)
+        public void BindComponentTo(Entity entity, IComponentData componentData, bool isAttach = true)
         {
             var componentType = componentData.GetType();
             var processing = entitySystemsController.SystemInfos.Values.Where(e =>
                 e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == componentType));
             foreach (var processingInfo in processing)
             {
-                if (processingInfo.NeededComponents.All(e => entity.HasComponent(e.TypeComponent.GetElementType())))
+                if (processingInfo.NeededComponents.All(e =>
+                    EntityContainer.HasComponent(entity, e.TypeComponent.GetElementType())))
                 {
                     processingInfo.AttachedEntity.Add(entity);
                     if (isAttach)
-                        EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
+                        AttachComponents(processingInfo, processingInfo.AttachedEntity);
                 }
             }
         }
 
-        public void UnbindComponent(Entity entity, IComponentData componentData)
+        public void UnbindComponent(Entity entity, Type componentType, bool isAttach = true)
         {
-            var componentType = componentData.GetType();
             var processing = entitySystemsController.SystemInfos.Values.Where(e =>
                 e.NeededComponents.Any(x => x.TypeComponent.GetElementType() == componentType));
             foreach (var processingInfo in processing)
             {
                 processingInfo.AttachedEntity.Remove(entity);
-                EntitySystemsController.AttachComponents(processingInfo, processingInfo.AttachedEntity);
+                if (isAttach)
+                    AttachComponents(processingInfo, processingInfo.AttachedEntity);
             }
         }
 
-        public IEntity CreateEntity()
+        public Entity CreateEntity()
         {
-            var entity = new Entity(this, ++lastId);
+            var entity = new Entity(++lastId);
             entities.Add(entity);
+            EntityContainer.AddEntity(entity);
             return entity;
         }
 
-        public void RemoveEntity(IEntity entity)
+        public void AttachComponents(SystemProcessingInfo processingInfo, List<Entity> entities)
         {
-            foreach (var componentData in entity.GetComponents())
+            foreach (var field in processingInfo.NeededComponents)
             {
-                entity.RemoveComponent(componentData.GetType());
+                var components = Array.CreateInstance(field.TypeComponent.GetElementType(), entities.Count);
+                for (var i = 0; i < entities.Count; i++)
+                    components.SetValue(
+                        EntityContainer.GetComponent(entities[i], field.TypeComponent.GetElementType()), i);
+                field.AttachToSystem(processingInfo.SystemProcessing, components as IComponentData[]);
             }
+        }
 
+        public void RemoveEntity(Entity entity)
+        {
             entities.Remove(entity);
+            EntityContainer.RemoveEntity(entity);
         }
 
         private bool CheckField(FieldInfo fieldInfo)
