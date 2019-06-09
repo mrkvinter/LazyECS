@@ -7,12 +7,18 @@ namespace LazyECS.Test.TestSystems
 {
     public class MultiplyProcessing : ISystemProcessing
     {
-        [InjectComponent] public MultiplayComponent MultiplayComponent;
-        [InjectComponent] public ValueComponent ValueComponent;
-        
+        [InjectComponent] public MultiplayComponent[] MultiplayComponent;
+        [InjectComponent] public ValueComponent[] ValueComponent;
+
+        public void Start()
+        {
+            
+        }
+
         public void Execute()
         {
-            ValueComponent.Value *= MultiplayComponent.Value;
+            for(var i = 0; i < ValueComponent.Length; i++)
+                ValueComponent[i].Value *= MultiplayComponent[i].Value;
         }
     }
 }

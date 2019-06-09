@@ -1,16 +1,23 @@
 using LazyECS.Component;
 using LazyECS.System;
 using LazyECS.Test.TestComponents;
+using NotImplementedException = System.NotImplementedException;
 
 namespace LazyECS.Test.TestSystems
 {
     public class MinusProcessing : ISystemProcessing
     {
-        [InjectComponent] public ValueMinusComponent ValueAddComponent;
+        [InjectComponent] public ValueMinusComponent[] ValueAddComponent;
+
+        public void Start()
+        {
             
+        }
+
         public void Execute()
         {
-            ValueAddComponent.Value--;
+            for(var i = 0; i < ValueAddComponent.Length; i++)
+                ValueAddComponent[i].Value--;
         }
     }
 }
