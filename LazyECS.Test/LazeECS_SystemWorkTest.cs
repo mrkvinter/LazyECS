@@ -21,8 +21,8 @@ namespace LazyECS.Test
         {
             var entity = ecsManager.CreateEntity();
             var valueAddComponent = new ValueAddComponent { Value = 0};
-            entity.AddComponent(valueAddComponent);
-            
+            ecsManager.EntityManager.AddComponent(entity, valueAddComponent);
+
             for(var i = 0; i < 5; i++)
                 entitySystems.OnUpdate();
             
@@ -35,8 +35,8 @@ namespace LazyECS.Test
             var entity = ecsManager.CreateEntity();
             var valueAddComponent = new ValueAddComponent { Value = 0};
             var valueMinusComponent = new ValueMinusComponent { Value = 0};
-            entity.AddComponent(valueAddComponent);
-            entity.AddComponent(valueMinusComponent);
+            ecsManager.EntityManager.AddComponent(entity, valueAddComponent);
+            ecsManager.EntityManager.AddComponent(entity, valueMinusComponent);
             
             for(var i = 0; i < 5; i++)
                 entitySystems.OnUpdate();
@@ -52,8 +52,8 @@ namespace LazyECS.Test
             var entityB = ecsManager.CreateEntity();
             var valueAddComponentA = new ValueAddComponent { Value = 0};
             var valueAddComponentB = new ValueAddComponent { Value = 0};
-            entityA.AddComponent(valueAddComponentA);
-            entityB.AddComponent(valueAddComponentB);
+            ecsManager.EntityManager.AddComponent(entityA, valueAddComponentA);
+            ecsManager.EntityManager.AddComponent(entityB, valueAddComponentB);
             
             for(var i = 0; i < 5; i++)
                 entitySystems.OnUpdate();
@@ -69,13 +69,13 @@ namespace LazyECS.Test
             var entityB = ecsManager.CreateEntity();
             var valueAddComponentA = new ValueAddComponent { Value = 0};
             var valueAddComponentB = new ValueAddComponent { Value = 0};
-            entityB.AddComponent(valueAddComponentB);
+            ecsManager.EntityManager.AddComponent(entityB, valueAddComponentB);
             
             for(var i = 0; i < 5; i++)
                 entitySystems.OnUpdate();
             
-            entityA.AddComponent(valueAddComponentA);
-            
+            ecsManager.EntityManager.AddComponent(entityA, valueAddComponentA);
+
             for(var i = 0; i < 5; i++)
                 entitySystems.OnUpdate();
             
@@ -88,10 +88,11 @@ namespace LazyECS.Test
         {
             var entity = ecsManager.CreateEntity();
             var valueAddComponent = new ValueAddComponent { Value = 0};
-            entity.AddComponent(valueAddComponent);
-            
+            ecsManager.EntityManager.AddComponent(entity, valueAddComponent);
+
             entitySystems.OnUpdate();
-            entity.RemoveComponent<ValueAddComponent>();
+            ecsManager.EntityManager.RemoveComponent<ValueAddComponent>(entity);
+
             entitySystems.OnUpdate();
             
             Assert.AreEqual(1, valueAddComponent.Value);
@@ -102,10 +103,11 @@ namespace LazyECS.Test
         {
             var entity = ecsManager.CreateEntity();
             var valueComponent = new ValueComponent() { Value = 2};
-            entity.AddComponent(valueComponent);
-            
+            ecsManager.EntityManager.AddComponent(entity, valueComponent);
+
             entitySystems.OnUpdate();
-            entity.AddComponent(new MultiplayComponent { Value = 2});
+            ecsManager.EntityManager.AddComponent(entity, new MultiplayComponent { Value = 2});
+
             entitySystems.OnUpdate();
             
             Assert.AreEqual(4, valueComponent.Value);

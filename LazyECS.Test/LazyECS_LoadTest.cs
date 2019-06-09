@@ -25,9 +25,10 @@ namespace LazyECS.Test
             for (var i = 0; i < countEntity; i++)
             {
                 var entity = ecsManager.CreateEntity();
-                entity.AddComponent(new ValueAddComponent { Value = 0});
+                ecsManager.EntityManager.AddComponent(entity, new ValueAddComponent { Value = 0});
             }
-
+            ecsManager.EntityManager.ExecuteEvents();
+            
             var sw = Stopwatch.StartNew();
             entitySystems.OnUpdate();
             sw.Stop();
