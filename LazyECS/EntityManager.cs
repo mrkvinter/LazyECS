@@ -27,7 +27,7 @@ namespace LazyECS
         
         public void RemoveComponent<T>(Entity entity)
         {
-            removeEventComponentInformation.Push((entity, typeof(T)));
+            RemoveComponent(entity, typeof(T));
         }
 
         public void ExecuteEvents()
