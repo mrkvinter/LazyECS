@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using LazyECS.Component;
@@ -20,6 +19,8 @@ namespace LazyECS
         private uint lastId;
         public EntityContainer EntityContainer;
 
+        private HashSet<Type> registeredSystemsProcessing = new HashSet<Type>();
+
         public ECSManager(IComponentAssignCreator componentAssignCreator)
         {
             this.componentAssignCreator = componentAssignCreator;
@@ -27,23 +28,19 @@ namespace LazyECS
             EntityContainer = new EntityContainer();
         }
 
+        public void Register<T>()
+            where T : ISystemProcessing
+        {
+            registeredSystemsProcessing.Add(typeof(T));
+        }
+
         public EntitySystemsController Init()
         {
             EntityManager = new EntityManager(this);
-            var typeSystem = typeof(ISystemProcessing);
-            var implementation =
-                AppDomain
-                    .CurrentDomain
-                    .GetAssemblies()
-                    .SelectMany(e => e.GetTypes())
-                    .Where(e => e.GetTypeInfo().IsClass && !e.GetTypeInfo().IsAbstract)
-                    .Where(e => typeSystem.IsAssignableFrom(e))
-                    .ToArray();
 
-            var systemProcessings = new Dictionary<Type, ISystemProcessing>(implementation.Length);
             var systemInfos = new Dictionary<Type, SystemProcessingInfo>();
 
-            foreach (var type in implementation)
+            foreach (var type in registeredSystemsProcessing)
             {
                 var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance).Where(CheckField);
 
@@ -56,9 +53,6 @@ namespace LazyECS
                 }
 
                 var instance = Activator.CreateInstance(type) as ISystemProcessing;
-
-                systemProcessings.Add(type, instance);
-
 
                 systemInfos.Add(type,
                     new SystemProcessingInfo {SystemProcessing = instance, NeededComponents = assignInfo});

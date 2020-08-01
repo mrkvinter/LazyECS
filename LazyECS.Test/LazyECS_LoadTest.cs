@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using LazyECS.Test.TestComponents;
+using LazyECS.Test.TestSystems;
 using LazyECS.Tools;
 using NUnit.Framework;
 
@@ -15,6 +16,7 @@ namespace LazyECS.Test
         public void Setup()
         {
             ecsManager = new ECSManager(new ComponentAssignCreator());
+            ecsManager.Register<AddValueProcessing>();
             entitySystems = ecsManager.Init();
         }
 

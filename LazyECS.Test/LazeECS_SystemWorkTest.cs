@@ -1,4 +1,5 @@
 using LazyECS.Test.TestComponents;
+using LazyECS.Test.TestSystems;
 using LazyECS.Tools;
 using NUnit.Framework;
 
@@ -7,20 +8,21 @@ namespace LazyECS.Test
     public class LazeEcsTests
     {
         private ECSManager ecsManager;
-        private EntitySystemsController entitySystems;
 
         [SetUp]
         public void Setup()
         {
             ecsManager = new ECSManager(new ComponentAssignCreator());
-            entitySystems = ecsManager.Init();
         }
 
         [Test]
         public void CorrectWorkWithOneEntityOneComponent()
         {
+            ecsManager.Register<AddValueProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entity = ecsManager.CreateEntity();
-            var valueAddComponent = new ValueAddComponent { Value = 0};
+            var valueAddComponent = new ValueAddComponent { Value = 0 };
             ecsManager.EntityManager.AddComponent(entity, valueAddComponent);
 
             for(var i = 0; i < 5; i++)
@@ -32,6 +34,10 @@ namespace LazyECS.Test
         [Test]
         public void CorrectWorkWithOneEntityManyComponent()
         {
+            ecsManager.Register<AddValueProcessing>();
+            ecsManager.Register<MinusProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entity = ecsManager.CreateEntity();
             var valueAddComponent = new ValueAddComponent { Value = 0};
             var valueMinusComponent = new ValueMinusComponent { Value = 0};
@@ -48,6 +54,9 @@ namespace LazyECS.Test
         [Test]
         public void CorrectWorkWithTwoEntityOneComponent()
         {
+            ecsManager.Register<AddValueProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entityA = ecsManager.CreateEntity();
             var entityB = ecsManager.CreateEntity();
             var valueAddComponentA = new ValueAddComponent { Value = 0};
@@ -65,6 +74,9 @@ namespace LazyECS.Test
         [Test]
         public void CorrectWorkWithTwoEntity_OneComponentAddedLater()
         {
+            ecsManager.Register<AddValueProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entityA = ecsManager.CreateEntity();
             var entityB = ecsManager.CreateEntity();
             var valueAddComponentA = new ValueAddComponent { Value = 0};
@@ -86,6 +98,9 @@ namespace LazyECS.Test
         [Test]
         public void CorrectWorkWithOneEntity_OneComponentRemoveLater()
         {
+            ecsManager.Register<AddValueProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entity = ecsManager.CreateEntity();
             var valueAddComponent = new ValueAddComponent { Value = 0};
             ecsManager.EntityManager.AddComponent(entity, valueAddComponent);
@@ -101,8 +116,11 @@ namespace LazyECS.Test
         [Test]
         public void CorrectWorkWithOneEntity_ProccesingRequireTwoComponent()
         {
+            ecsManager.Register<MultiplyProcessing>();
+            var entitySystems = ecsManager.Init();
+
             var entity = ecsManager.CreateEntity();
-            var valueComponent = new ValueComponent() { Value = 2};
+            var valueComponent = new ValueComponent { Value = 2};
             ecsManager.EntityManager.AddComponent(entity, valueComponent);
 
             entitySystems.OnUpdate();
