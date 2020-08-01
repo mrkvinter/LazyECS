@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using LazyECS.Component;
 using LazyECS.Models;
 
 namespace LazyECS
@@ -16,12 +14,6 @@ namespace LazyECS
         {
             SystemInfos = systemInfos;
             this.entityManager = entityManager;
-        }
-
-        public void OnStart()
-        {
-            foreach (var processing in SystemInfos)
-                processing.Value.SystemProcessing.Start();
         }
 
         public void OnUpdate()

@@ -9,11 +9,6 @@ namespace LazyECS.Test.TestSystems
     {
         [InjectComponent] public ValueMinusComponent[] ValueAddComponent;
 
-        public void Start()
-        {
-            
-        }
-
         public void Execute()
         {
             for(var i = 0; i < ValueAddComponent.Length; i++)

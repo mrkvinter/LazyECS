@@ -10,11 +10,6 @@ namespace LazyECS.Test.TestSystems
         [InjectComponent] public MultiplayComponent[] MultiplayComponent;
         [InjectComponent] public ValueComponent[] ValueComponent;
 
-        public void Start()
-        {
-            
-        }
-
         public void Execute()
         {
             for(var i = 0; i < ValueComponent.Length; i++)
